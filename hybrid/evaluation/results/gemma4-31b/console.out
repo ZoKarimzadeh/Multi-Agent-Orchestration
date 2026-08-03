@@ -1,0 +1,31 @@
+Loaded 500 records from evaluation_results.json
+Using metrics from metrics.py
+
+============================================================
+Condition: hybrid_no_context  (n=250)
+============================================================
+  Completion Time : mean=6.79s  std=11.96  median=3.94  min=0.63  max=129.02
+                   95% CI [5.31, 8.27]
+  Success Rate    : 76.0%  (190/250)
+                   95% CI [70.3%, 80.9%]
+  Error Rate      : 16.0%  (40/250)
+  Escalation Rate : 8.0%  (20/250)
+  Outcome Match   : 96.0%  (240/250)
+                   95% CI [92.8%, 97.8%]
+  Tool Accuracy   : 97.7%  (210/215)
+  LLM Calls/run   : 1.92  (total=480, runs=250)
+
+============================================================
+Condition: hybrid_with_context  (n=250)
+============================================================
+  Completion Time : mean=6.04s  std=6.97  median=3.93  min=0.65  max=56.61
+                   95% CI [5.17, 6.90]
+  Success Rate    : 78.0%  (195/250)
+                   95% CI [72.5%, 82.7%]
+  Error Rate      : 14.0%  (35/250)
+  Escalation Rate : 8.0%  (20/250)
+  Outcome Match   : 98.0%  (245/250)
+                   95% CI [95.4%, 99.1%]
+  Tool Accuracy   : 97.7%  (210/215)
+  LLM Calls/run   : 1.92  (total=480, runs=250)
+

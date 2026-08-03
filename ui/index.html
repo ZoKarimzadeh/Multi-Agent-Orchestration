@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Evaluation Run Viewer</title>
+</head>
+<body>
+  <h2>Evaluation Run Viewer</h2>
+
+  <label>Architecture:</label>
+  <select id="arch">
+    <option value="hybrid/hybrid_with_context">Hybrid — With Context</option>
+    <option value="hybrid/hybrid_no_context">Hybrid — Without Context</option>
+    <option value="llm-base/multi_agent_with_context">LLM Base — With Context</option>
+    <option value="llm-base/multi_agent_no_context">LLM Base — Without Context</option>
+    <option value="llm-base/baseline">LLM Base — Baseline</option>
+  </select>
+  <br><br>
+
+  <label>Model:</label>
+  <select id="model">
+    <option value="gemma4-31b">Gemma4-31B</option>
+    <option value="gpt-4o-mini">GPT-4o-mini</option>
+    <option value="gpt-5.4-mini">GPT-5.4-mini</option>
+    <option value="qwen2.5-7b_local">Qwen2.5-7B</option>
+  </select>
+  <br><br>
+
+  <label>Scenario:</label>
+  <select id="scenario">
+    <option value="S01">S01</option>
+    <option value="S02">S02</option>
+    <option value="S03">S03</option>
+    <option value="S04">S04</option>
+    <option value="S05">S05</option>
+    <option value="S06">S06</option>
+    <option value="S07">S07</option>
+    <option value="S08">S08</option>
+    <option value="S09">S09</option>
+    <option value="S10">S10</option>
+    <option value="S11">S11</option>
+    <option value="S12">S12</option>
+    <option value="S13">S13</option>
+    <option value="S14">S14</option>
+    <option value="S15">S15</option>
+    <option value="S16">S16</option>
+    <option value="S17">S17</option>
+    <option value="S18">S18</option>
+    <option value="S19">S19</option>
+    <option value="S20">S20</option>
+    <option value="S21">S21</option>
+    <option value="S22">S22</option>
+    <option value="S23">S23</option>
+    <option value="S24">S24</option>
+    <option value="S25">S25</option>
+    <option value="S26">S26</option>
+    <option value="S27">S27</option>
+    <option value="S28">S28</option>
+    <option value="S29">S29</option>
+    <option value="S30">S30</option>
+    <option value="S31">S31</option>
+    <option value="S32">S32</option>
+    <option value="S33">S33</option>
+    <option value="S34">S34</option>
+    <option value="S35">S35</option>
+    <option value="S36">S36</option>
+    <option value="S37">S37</option>
+    <option value="S38">S38</option>
+    <option value="S39">S39</option>
+    <option value="S40">S40</option>
+    <option value="S41">S41</option>
+    <option value="S42">S42</option>
+    <option value="S43">S43</option>
+    <option value="S44">S44</option>
+    <option value="S45">S45</option>
+    <option value="S46">S46</option>
+    <option value="S47">S47</option>
+    <option value="S48">S48</option>
+    <option value="S49">S49</option>
+    <option value="S50">S50</option>
+  </select>
+  <br><br>
+
+  <label>Run:</label>
+  <select id="run">
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+  </select>
+  <br><br>
+
+  <button onclick="find()">Find</button>
+  <hr>
+
+  <pre id="output">Select options and click Find.</pre>
+
+  <script>
+    function find() {
+      var archVal = document.getElementById("arch").value;
+      var model = document.getElementById("model").value;
+      var scenario = document.getElementById("scenario").value;
+      var run = document.getElementById("run").value;
+
+      var archDir = archVal.split("/")[0];
+      var condition = archVal.split("/")[1];
+
+      var url = "../" + archDir + "/evaluation/results/" + model + "/evaluation_results.json";
+
+      fetch(url)
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+          var found = null;
+          for (var i = 0; i < data.length; i++) {
+            var r = data[i];
+            if (r.condition === condition && r.scenario_id === scenario && r.run_number === parseInt(run)) {
+              found = r;
+              break;
+            }
+          }
+
+          if (!found) {
+            document.getElementById("output").textContent = "Not found.";
+            return;
+          }
+
+          var result = "";
+          result += "=== Run Info ===\n";
+          result += "Scenario:    " + found.scenario_id + " (" + found.scenario_category + ")\n";
+          result += "Run:         " + found.run_number + "\n";
+          result += "Condition:   " + found.condition + "\n";
+          result += "Model:       " + model + "\n";
+          result += "Customer ID: " + found.customer_id + "\n";
+          result += "\n";
+
+          result += "=== Outcome ===\n";
+          if (found.success) {
+            result += "Result:      SUCCESS\n";
+          } else if (found.escalated) {
+            result += "Result:      ESCALATED\n";
+          } else {
+            result += "Result:      ERROR\n";
+          }
+          result += "Expected:    " + found.expected_outcome + "\n";
+          result += "Errors:      " + found.error_count + "\n";
+          result += "Time:        " + found.elapsed_time.toFixed(2) + "s\n";
+          result += "LLM calls:   " + found.llm_calls_total + "\n";
+          result += "Steps:       " + found.step_count + "\n";
+          result += "\n";
+
+          result += "=== Request ===\n";
+          result += found.request + "\n";
+          result += "\n";
+
+          result += "=== Response ===\n";
+          result += found.final_response + "\n";
+          result += "\n";
+
+          result += "=== Intent ===\n";
+          result += "Intent:   " + found.intent + "\n";
+          result += "Entities: " + JSON.stringify(found.entities) + "\n";
+          result += "\n";
+
+          result += "=== Tools ===\n";
+          result += "Tools used:     " + found.tool_calls.join(", ") + "\n";
+          result += "Agents involved: " + found.agents_involved.join(", ") + "\n";
+          result += "\n";
+
+          if (found.completed_tasks.length > 0) {
+            result += "=== Completed Tasks ===\n";
+            for (var t = 0; t < found.completed_tasks.length; t++) {
+              var task = found.completed_tasks[t];
+              result += "- " + task.agent + " — " + task.task_type + "\n";
+              if (task.tool_calls) {
+                for (var c = 0; c < task.tool_calls.length; c++) {
+                  var tc = task.tool_calls[c];
+                  result += "    " + tc.tool + "(" + JSON.stringify(tc.args) + ")\n";
+                }
+              }
+            }
+            result += "\n";
+          }
+
+          if (found.llm_call_log.length > 0) {
+            result += "=== LLM Calls ===\n";
+            for (var i = 0; i < found.llm_call_log.length; i++) {
+              var call = found.llm_call_log[i];
+              result += "--- Call " + (i + 1) + ": " + call.agent + " (" + call.latency_ms.toFixed(0) + "ms) ---\n";
+              result += "[Request]\n" + call.request_text + "\n\n";
+              result += "[Response]\n" + call.response_text + "\n\n";
+            }
+          }
+
+          document.getElementById("output").textContent = result;
+        });
+    }
+  </script>
+</body>
+</html>

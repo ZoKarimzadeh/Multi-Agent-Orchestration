@@ -1,0 +1,45 @@
+Loaded 750 records from evaluation_results.json
+Using metrics from metrics.py
+
+============================================================
+Condition: baseline  (n=250)
+============================================================
+  Completion Time : mean=3.74s  std=1.89  median=3.37  min=0.80  max=9.06
+                   95% CI [3.50, 3.97]
+  Success Rate    : 61.2%  (153/250)
+                   95% CI [55.0%, 67.0%]
+  Error Rate      : 27.6%  (69/250)
+  Escalation Rate : 4.8%  (12/250)
+  Outcome Match   : 70.4%  (176/250)
+                   95% CI [64.5%, 75.7%]
+  Tool Accuracy   : 89.8%  (193/215)
+  LLM Calls/run   : 2.18  (total=544, runs=250)
+
+============================================================
+Condition: multi_agent_no_context  (n=250)
+============================================================
+  Completion Time : mean=8.86s  std=4.10  median=8.83  min=1.01  max=22.15
+                   95% CI [8.36, 9.37]
+  Success Rate    : 71.6%  (179/250)
+                   95% CI [65.7%, 76.8%]
+  Error Rate      : 25.2%  (63/250)
+  Escalation Rate : 3.2%  (8/250)
+  Outcome Match   : 74.0%  (185/250)
+                   95% CI [68.2%, 79.0%]
+  Tool Accuracy   : 91.6%  (197/215)
+  LLM Calls/run   : 6.34  (total=1585, runs=250)
+
+============================================================
+Condition: multi_agent_with_context  (n=250)
+============================================================
+  Completion Time : mean=8.72s  std=3.90  median=8.14  min=1.17  max=22.05
+                   95% CI [8.24, 9.20]
+  Success Rate    : 72.8%  (182/250)
+                   95% CI [67.0%, 77.9%]
+  Error Rate      : 24.8%  (62/250)
+  Escalation Rate : 2.4%  (6/250)
+  Outcome Match   : 73.6%  (184/250)
+                   95% CI [67.8%, 78.7%]
+  Tool Accuracy   : 91.2%  (196/215)
+  LLM Calls/run   : 6.18  (total=1544, runs=250)
+
