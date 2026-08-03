@@ -106,7 +106,7 @@
       var archDir = archVal.split("/")[0];
       var condition = archVal.split("/")[1];
 
-      var url = "../" + archDir + "/evaluation/results/" + model + "/evaluation_results.json";
+      var url = archDir + "/evaluation/results/" + model + "/evaluation_results.json";
 
       fetch(url)
         .then(function(resp) { return resp.json(); })
