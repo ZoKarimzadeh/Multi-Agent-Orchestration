@@ -2,101 +2,935 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Evaluation Run Viewer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-card: rgba(30, 41, 59, 0.8);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --accent-pink: #ec4899;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-cyan: #06b6d4;
+      --accent-red: #f87171;
+      --border-color: rgba(148, 163, 184, 0.1);
+      --node-gray: #475569;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1a2e 50%, #16213e 100%);
+      min-height: 100vh;
+      color: var(--text-primary);
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple), var(--accent-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      font-family: inherit;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .form-group select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+
+    .form-group select:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .btn-find {
+      width: 100%;
+      padding: 0.875rem 1.5rem;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-find:hover {
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .workflow-chart {
+      margin-bottom: 1.5rem;
+    }
+
+    .chart-container {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    .chart-svg {
+      width: 100%;
+      min-height: 320px;
+    }
+
+    .node-group {
+      cursor: pointer;
+    }
+
+    .node-text {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      pointer-events: none;
+      fill: white;
+    }
+
+    .node-subtext {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      pointer-events: none;
+      fill: rgba(255,255,255,0.7);
+    }
+
+    .node-gray .node-rect {
+      fill: var(--node-gray);
+      stroke: rgba(255,255,255,0.1);
+      stroke-width: 1;
+    }
+
+    .node-active .node-rect {
+      stroke: white;
+      stroke-width: 2;
+    }
+
+    .node-selected .node-rect {
+      stroke: white;
+      stroke-width: 3;
+      stroke-dasharray: 6 3;
+    }
+
+    .arrow-line {
+      stroke: rgba(148, 163, 184, 0.3);
+      stroke-width: 2;
+      fill: none;
+      marker-end: url(#arrowhead);
+    }
+
+    .arrow-active {
+      stroke: var(--accent-blue);
+      stroke-width: 3;
+    }
+
+    .node-info {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-top: 1rem;
+      border-left: 4px solid var(--accent-blue);
+      display: none;
+    }
+
+    .node-info.visible {
+      display: block;
+    }
+
+    .node-info h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .node-info p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .result-card {
+      display: none;
+    }
+
+    .result-card.visible {
+      display: block;
+    }
+
+    .outcome-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .outcome-success {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .outcome-escalated {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--accent-orange);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .outcome-error {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .metric-item {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      border: 1px solid var(--border-color);
+    }
+
+    .metric-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .metric-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-section {
+      margin-top: 1.5rem;
+    }
+
+    .detail-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .request-box,
+    .response-box {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      border: 1px solid var(--border-color);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      white-space: pre-wrap;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .tag {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-blue);
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .tasks-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .task-item {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      border-left: 3px solid var(--accent-purple);
+      font-size: 0.9rem;
+    }
+
+    .task-agent {
+      font-weight: 600;
+      color: var(--accent-purple);
+    }
+
+    .task-type {
+      color: var(--text-secondary);
+    }
+
+    .llm-call {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .llm-call-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .llm-call-agent {
+      font-weight: 600;
+      color: var(--accent-cyan);
+    }
+
+    .llm-call-latency {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      background: rgba(6, 182, 212, 0.1);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .llm-call-content {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .llm-call-content pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem;
+      }
+
+      header h1 {
+        font-size: 1.75rem;
+      }
+
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h2>Evaluation Run Viewer</h2>
+  <div class="container">
+    <header>
+      <h1>Evaluation Run Viewer</h1>
+      <p>Explore agent workflow performance across scenarios</p>
+    </header>
 
-  <label>Architecture:</label>
-  <select id="arch">
-    <option value="hybrid/hybrid_with_context">Hybrid — With Context</option>
-    <option value="hybrid/hybrid_no_context">Hybrid — Without Context</option>
-    <option value="llm-base/multi_agent_with_context">LLM Base — With Context</option>
-    <option value="llm-base/multi_agent_no_context">LLM Base — Without Context</option>
-    <option value="llm-base/baseline">LLM Base — Baseline</option>
-  </select>
-  <br><br>
+    <div class="main-grid">
+      <aside>
+        <div class="card">
+          <div class="card-title">Configuration</div>
 
-  <label>Model:</label>
-  <select id="model">
-    <option value="gemma4-31b">Gemma4-31B</option>
-    <option value="gpt-4o-mini">GPT-4o-mini</option>
-    <option value="gpt-5.4-mini">GPT-5.4-mini</option>
-    <option value="qwen2.5-7b_local">Qwen2.5-7B</option>
-  </select>
-  <br><br>
+          <div class="form-group">
+            <label>Architecture</label>
+            <select id="arch">
+              <option value="hybrid/hybrid_with_context">Hybrid — With Context</option>
+              <option value="hybrid/hybrid_no_context">Hybrid — Without Context</option>
+              <option value="llm-base/multi_agent_with_context">LLM Base — With Context</option>
+              <option value="llm-base/multi_agent_no_context">LLM Base — Without Context</option>
+              <option value="llm-base/baseline">LLM Base — Baseline</option>
+            </select>
+          </div>
 
-  <label>Scenario:</label>
-  <select id="scenario">
-    <option value="S01">S01</option>
-    <option value="S02">S02</option>
-    <option value="S03">S03</option>
-    <option value="S04">S04</option>
-    <option value="S05">S05</option>
-    <option value="S06">S06</option>
-    <option value="S07">S07</option>
-    <option value="S08">S08</option>
-    <option value="S09">S09</option>
-    <option value="S10">S10</option>
-    <option value="S11">S11</option>
-    <option value="S12">S12</option>
-    <option value="S13">S13</option>
-    <option value="S14">S14</option>
-    <option value="S15">S15</option>
-    <option value="S16">S16</option>
-    <option value="S17">S17</option>
-    <option value="S18">S18</option>
-    <option value="S19">S19</option>
-    <option value="S20">S20</option>
-    <option value="S21">S21</option>
-    <option value="S22">S22</option>
-    <option value="S23">S23</option>
-    <option value="S24">S24</option>
-    <option value="S25">S25</option>
-    <option value="S26">S26</option>
-    <option value="S27">S27</option>
-    <option value="S28">S28</option>
-    <option value="S29">S29</option>
-    <option value="S30">S30</option>
-    <option value="S31">S31</option>
-    <option value="S32">S32</option>
-    <option value="S33">S33</option>
-    <option value="S34">S34</option>
-    <option value="S35">S35</option>
-    <option value="S36">S36</option>
-    <option value="S37">S37</option>
-    <option value="S38">S38</option>
-    <option value="S39">S39</option>
-    <option value="S40">S40</option>
-    <option value="S41">S41</option>
-    <option value="S42">S42</option>
-    <option value="S43">S43</option>
-    <option value="S44">S44</option>
-    <option value="S45">S45</option>
-    <option value="S46">S46</option>
-    <option value="S47">S47</option>
-    <option value="S48">S48</option>
-    <option value="S49">S49</option>
-    <option value="S50">S50</option>
-  </select>
-  <br><br>
+          <div class="form-group">
+            <label>Model</label>
+            <select id="model">
+              <option value="gemma4-31b">Gemma4-31B</option>
+              <option value="gpt-4o-mini">GPT-4o-mini</option>
+              <option value="gpt-5.4-mini">GPT-5.4-mini</option>
+              <option value="qwen2.5-7b_local">Qwen2.5-7B</option>
+            </select>
+          </div>
 
-  <label>Run:</label>
-  <select id="run">
-    <option value="1">1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
-    <option value="4">4</option>
-    <option value="5">5</option>
-  </select>
-  <br><br>
+          <div class="form-group">
+            <label>Scenario</label>
+            <select id="scenario">
+              <option value="S01">S01</option>
+              <option value="S02">S02</option>
+              <option value="S03">S03</option>
+              <option value="S04">S04</option>
+              <option value="S05">S05</option>
+              <option value="S06">S06</option>
+              <option value="S07">S07</option>
+              <option value="S08">S08</option>
+              <option value="S09">S09</option>
+              <option value="S10">S10</option>
+              <option value="S11">S11</option>
+              <option value="S12">S12</option>
+              <option value="S13">S13</option>
+              <option value="S14">S14</option>
+              <option value="S15">S15</option>
+              <option value="S16">S16</option>
+              <option value="S17">S17</option>
+              <option value="S18">S18</option>
+              <option value="S19">S19</option>
+              <option value="S20">S20</option>
+              <option value="S21">S21</option>
+              <option value="S22">S22</option>
+              <option value="S23">S23</option>
+              <option value="S24">S24</option>
+              <option value="S25">S25</option>
+              <option value="S26">S26</option>
+              <option value="S27">S27</option>
+              <option value="S28">S28</option>
+              <option value="S29">S29</option>
+              <option value="S30">S30</option>
+              <option value="S31">S31</option>
+              <option value="S32">S32</option>
+              <option value="S33">S33</option>
+              <option value="S34">S34</option>
+              <option value="S35">S35</option>
+              <option value="S36">S36</option>
+              <option value="S37">S37</option>
+              <option value="S38">S38</option>
+              <option value="S39">S39</option>
+              <option value="S40">S40</option>
+              <option value="S41">S41</option>
+              <option value="S42">S42</option>
+              <option value="S43">S43</option>
+              <option value="S44">S44</option>
+              <option value="S45">S45</option>
+              <option value="S46">S46</option>
+              <option value="S47">S47</option>
+              <option value="S48">S48</option>
+              <option value="S49">S49</option>
+              <option value="S50">S50</option>
+            </select>
+          </div>
 
-  <button onclick="find()">Find</button>
-  <hr>
+          <div class="form-group">
+            <label>Run</label>
+            <select id="run">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
 
-  <pre id="output">Select options and click Find.</pre>
+          <button class="btn-find" onclick="find()">Find Run</button>
+        </div>
+      </aside>
+
+      <main>
+        <div class="card workflow-chart" id="workflowSection">
+          <div class="card-title">Agent Workflow</div>
+          <div class="chart-container">
+            <svg class="chart-svg" viewBox="0 0 900 340" id="workflowChart">
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="rgba(148,163,184,0.5)" />
+                </marker>
+                <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
+                </marker>
+              </defs>
+
+              <!-- Connection Lines -->
+              <line class="arrow-line" id="arrow-intake-planner" x1="170" y1="170" x2="290" y2="170" />
+              <line class="arrow-line" id="arrow-planner-order" x1="450" y1="170" x2="580" y2="80" />
+              <line class="arrow-line" id="arrow-planner-account" x1="450" y1="170" x2="580" y2="170" />
+              <line class="arrow-line" id="arrow-planner-billing" x1="450" y1="170" x2="580" y2="260" />
+              <line class="arrow-line" id="arrow-order-response" x1="760" y1="80" x2="820" y2="170" />
+              <line class="arrow-line" id="arrow-account-response" x1="760" y1="170" x2="820" y2="170" />
+              <line class="arrow-line" id="arrow-billing-response" x1="760" y1="260" x2="820" y2="170" />
+
+              <!-- Nodes -->
+              <g class="node-group node-gray" id="node-intake" data-name="Intake" data-desc="Receives the raw customer message and passes it into the workflow. No LLM call yet at this stage.">
+                <rect class="node-rect" x="10" y="140" width="160" height="60" rx="12" fill="#475569" />
+                <text class="node-text" x="90" y="168" text-anchor="middle" font-size="14">Intake</text>
+                <text class="node-subtext" x="90" y="188" text-anchor="middle">Customer Message</text>
+              </g>
+
+              <g class="node-group node-gray" id="node-planner" data-name="Agent Manager (Planner)" data-desc="agent_manager classifies intent and builds a task_sequence. One LLM call (classify_and_plan). Determines which specialist agents to invoke.">
+                <rect class="node-rect" x="290" y="140" width="160" height="60" rx="12" fill="#475569" />
+                <text class="node-text" x="370" y="168" text-anchor="middle" font-size="14">Agent Manager</text>
+                <text class="node-subtext" x="370" y="188" text-anchor="middle">classify_and_plan</text>
+              </g>
+
+              <g class="node-group node-gray" id="node-order" data-name="Order Agent" data-desc="order_agent - handles order lifecycle: status, tracking, cancellation, returns, listing orders.">
+                <rect class="node-rect" x="580" y="50" width="180" height="60" rx="12" fill="#475569" />
+                <text class="node-text" x="670" y="78" text-anchor="middle" font-size="14">Order Agent</text>
+                <text class="node-subtext" x="670" y="98" text-anchor="middle">status / tracking / cancel</text>
+              </g>
+
+              <g class="node-group node-gray" id="node-account" data-name="Account Agent" data-desc="account_agent - manages customer profile: email, shipping address, payment method, profile view.">
+                <rect class="node-rect" x="580" y="140" width="180" height="60" rx="12" fill="#475569" />
+                <text class="node-text" x="670" y="168" text-anchor="middle" font-size="14">Account Agent</text>
+                <text class="node-subtext" x="670" y="188" text-anchor="middle">profile / email / address</text>
+              </g>
+
+              <g class="node-group node-gray" id="node-billing" data-name="Billing Agent" data-desc="billing_agent - handles payment status, refunds, billing history, duplicate-charge detection.">
+                <rect class="node-rect" x="580" y="230" width="180" height="60" rx="12" fill="#475569" />
+                <text class="node-text" x="670" y="258" text-anchor="middle" font-size="14">Billing Agent</text>
+                <text class="node-subtext" x="670" y="278" text-anchor="middle">payments / refunds</text>
+              </g>
+
+              <g class="node-group node-gray" id="node-response" data-name="Generate Response" data-desc="agent_manager.generate_response assembles the final customer-facing reply from completed tasks. Hybrid mode adds an LLM-polishing call.">
+                <rect class="node-rect" x="820" y="140" width="80" height="60" rx="12" fill="#475569" />
+                <text class="node-text" x="860" y="168" text-anchor="middle" font-size="12">Output</text>
+                <text class="node-subtext" x="860" y="188" text-anchor="middle">Response</text>
+              </g>
+            </svg>
+          </div>
+          <div class="node-info" id="nodeInfo">
+            <h4>Select a node</h4>
+            <p>Click on any node in the workflow to see its details and highlight its role.</p>
+          </div>
+        </div>
+
+        <div class="card result-card" id="resultCard">
+          <div class="card-title">Run Results</div>
+
+          <div id="outcomeBadge"></div>
+
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <div class="metric-value" id="metricTime">--</div>
+              <div class="metric-label">Elapsed Time</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-value" id="metricLLM">--</div>
+              <div class="metric-label">LLM Calls</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-value" id="metricSteps">--</div>
+              <div class="metric-label">Steps</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-value" id="metricErrors">--</div>
+              <div class="metric-label">Errors</div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-title">Request</div>
+            <div class="request-box" id="requestBox">--</div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-title">Response</div>
+            <div class="response-box" id="responseBox">--</div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-title">Intent & Entities</div>
+            <div class="request-box" id="intentBox">--</div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-title">Tools & Agents Used</div>
+            <div class="tags" id="toolsTags"></div>
+            <div class="tags" id="agentsTags" style="margin-top:0.5rem"></div>
+          </div>
+
+          <div class="detail-section" id="tasksSection" style="display:none">
+            <div class="detail-title">Completed Tasks</div>
+            <ul class="tasks-list" id="tasksList"></ul>
+          </div>
+
+          <div class="detail-section" id="llmSection" style="display:none">
+            <div class="detail-title">LLM Call Log</div>
+            <div id="llmCalls"></div>
+          </div>
+        </div>
+
+        <div class="card" id="emptyState">
+          <div class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <h3>No run selected</h3>
+            <p>Configure the options and click "Find Run" to view results</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
 
   <script>
+    const nodeArrowMap = {
+      "node-intake": ["arrow-intake-planner"],
+      "node-planner": ["arrow-intake-planner", "arrow-planner-order", "arrow-planner-account", "arrow-planner-billing"],
+      "node-order": ["arrow-planner-order", "arrow-order-response"],
+      "node-account": ["arrow-planner-account", "arrow-account-response"],
+      "node-billing": ["arrow-planner-billing", "arrow-billing-response"],
+      "node-response": ["arrow-order-response", "arrow-account-response", "arrow-billing-response"]
+    };
+
+    const nodeColorValues = {
+      "node-intake": "#3b82f6",
+      "node-planner": "#8b5cf6",
+      "node-order": "#ec4899",
+      "node-account": "#10b981",
+      "node-billing": "#f59e0b",
+      "node-response": "#06b6d4"
+    };
+
+    const nodeGroups = document.querySelectorAll(".node-group");
+    let currentRun = null;
+    let selectedNode = null;
+
+    const nodeAgentMapping = {
+      "node-intake": null,
+      "node-planner": "agent_manager",
+      "node-order": "order_agent",
+      "node-account": "account_agent",
+      "node-billing": "billing_agent",
+      "node-response": "agent_manager_response"
+    };
+
+    nodeGroups.forEach(function(group) {
+      group.addEventListener("click", function() {
+        const nodeId = this.id;
+        const colorValue = nodeColorValues[nodeId];
+        const name = this.getAttribute("data-name");
+        const desc = this.getAttribute("data-desc");
+
+        if (selectedNode === nodeId) {
+          nodeGroups.forEach(function(g) { g.classList.remove("node-selected"); });
+          selectedNode = null;
+          document.getElementById("nodeInfo").classList.remove("visible");
+          return;
+        }
+
+        nodeGroups.forEach(function(g) { g.classList.remove("node-selected"); });
+        this.classList.add("node-selected");
+        selectedNode = nodeId;
+
+        var infoPanel = document.getElementById("nodeInfo");
+        var agentName = nodeAgentMapping[nodeId];
+        var detailsHtml = "<h4>" + name + "</h4>";
+        detailsHtml += '<p style="margin-bottom:0.75rem">' + desc + "</p>";
+
+        if (currentRun && agentName) {
+          var relatedCalls = (currentRun.llm_call_log || []).filter(function(c) {
+            return c.agent === agentName;
+          });
+
+          if (relatedCalls.length > 0) {
+            detailsHtml += '<div style="margin-top:0.5rem"><strong style="color:var(--text-primary);font-size:0.85rem">LLM Calls (' + relatedCalls.length + "):</strong></div>";
+            detailsHtml += formatCallContent(relatedCalls);
+          }
+
+          var relatedTasks = (currentRun.completed_tasks || []).filter(function(t) {
+            return t.agent === agentName;
+          });
+          if (relatedTasks.length > 0) {
+            detailsHtml += '<div style="margin-top:0.5rem"><strong style="color:var(--text-primary);font-size:0.85rem">Tasks Completed (' + relatedTasks.length + "):</strong></div>";
+            detailsHtml += '<ul style="margin:0.5rem 0;padding-left:1.25rem;font-size:0.85rem;color:var(--text-secondary)">';
+            relatedTasks.forEach(function(t) {
+              detailsHtml += "<li>" + t.task_type + "</li>";
+            });
+            detailsHtml += "</ul>";
+          }
+
+          if (relatedCalls.length === 0 && relatedTasks.length === 0) {
+            detailsHtml += '<p style="color:var(--text-secondary);font-size:0.85rem;font-style:italic;margin-top:0.5rem">No LLM calls or tasks for this agent in this run.</p>';
+          }
+        } else if (agentName === null && nodeId === "node-intake") {
+          detailsHtml += '<p style="color:var(--text-secondary);font-size:0.85rem;font-style:italic;margin-top:0.5rem">This is the entry point — receives the customer message before any agent runs.</p>';
+        }
+
+        infoPanel.innerHTML = detailsHtml;
+        infoPanel.style.borderLeftColor = colorValue;
+        infoPanel.classList.add("visible");
+      });
+    });
+
+    // Format LLM calls with expandable request/response sections
+    function formatCallContent(calls) {
+      var result = "";
+      for (var i = 0; i < calls.length; i++) {
+        var c = calls[i];
+        var html = '<div style="margin-bottom:1rem;padding:0.5rem;background:rgba(15,23,42,0.6);border-radius:8px;border:1px solid var(--border-color);">';
+        html += '<div style="font-weight:600;color:var(--accent-cyan);font-size:0.85rem;margin-bottom:0.25rem">Call: ' + c.agent + " (" + c.latency_ms.toFixed(0) + "ms)</div>";
+        html += '<div style="margin:0.25rem 0">';
+        if (c.request_text) {
+          html += '<details style="margin:0.1rem 0">';
+          html += '<summary style="cursor:pointer;font-size:0.7rem;color:var(--accent-red);font-weight:600">Request</summary>';
+          html += '<pre style="font-size:0.65rem;white-space:pre-wrap;color:var(--text-primary);background:rgba(248,113,113,0.1);padding:0.2rem;border-radius:2px;margin:0.1rem 0;overflow-x:auto;max-width:90%">' + escapeHtmlReqResp(c.request_text) + "</pre>";
+          html += "</details>";
+        }
+        if (c.response_text) {
+          html += '<details style="margin:0.1rem 0">';
+          html += '<summary style="cursor:pointer;font-size:0.7rem;color:var(--accent-green);font-weight:600">Response</summary>';
+          html += '<pre style="font-size:0.65rem;white-space:pre-wrap;color:var(--text-primary);background:rgba(16,185,129,0.1);padding:0.2rem;border-radius:2px;margin:0.1rem 0;overflow-x:auto;max-width:90%">' + escapeHtmlReqResp(c.response_text) + "</pre>";
+          html += "</details>";
+        }
+        html += "</div>";
+        html += "</div>";
+        result += html;
+      }
+      return result;
+    }
+
+    // Escape HTML special characters and convert newlines to <br/>
+    // Used for request/response text shown inside <pre> tags
+    function escapeHtmlReqResp(str) {
+      if (!str) return "";
+      return str
+        .replace(/&/g, "&amp;")   // & must be first to avoid double-escaping
+        .replace(/</g, "&lt;")    // < → &lt; so browser shows it as text
+        .replace(/>/g, "&gt;")    // > → &gt; so browser shows it as text
+        .replace(/\n/g, "<br/>"); // newline → <br/> for display in HTML
+    }
+
+    // Escape HTML special characters (no newline handling)
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function resetAllNodes() {
+      nodeGroups.forEach(function(g) {
+        g.classList.remove("node-active");
+        g.classList.add("node-gray");
+        var rect = g.querySelector(".node-rect");
+        if (rect) rect.style.fill = "";
+      });
+      document.querySelectorAll(".arrow-line").forEach(function(line) {
+        line.classList.remove("arrow-active");
+        line.setAttribute("marker-end", "url(#arrowhead)");
+      });
+    }
+
+    function highlightUsedNodes(agentsInvolved, llmCallLog) {
+      resetAllNodes();
+      selectedNode = null;
+
+      var agentMap = {
+        "order_agent": "node-order",
+        "account_agent": "node-account",
+        "billing_agent": "node-billing",
+        "agent_manager": "node-planner",
+        "agent_manager_response": "node-response",
+        "baseline_agent": "node-response"
+      };
+
+      var activatedNodes = ["node-intake", "node-planner"];
+
+      function mapAgent(key) {
+        var nodeId = agentMap[key];
+        if (!nodeId) {
+          if (key.indexOf("order") !== -1) nodeId = "node-order";
+          else if (key.indexOf("account") !== -1) nodeId = "node-account";
+          else if (key.indexOf("billing") !== -1) nodeId = "node-billing";
+          else if (key.indexOf("manager") !== -1 && key.indexOf("response") !== -1) nodeId = "node-response";
+          else if (key.indexOf("manager") !== -1) nodeId = "node-planner";
+          else if (key.indexOf("baseline") !== -1) nodeId = "node-response";
+        }
+        return nodeId;
+      }
+
+      for (var a = 0; a < agentsInvolved.length; a++) {
+        var key = agentsInvolved[a].toLowerCase().replace(/[\s-]/g, "_");
+        var nodeId = mapAgent(key);
+        if (nodeId && activatedNodes.indexOf(nodeId) === -1) activatedNodes.push(nodeId);
+      }
+
+      if (llmCallLog && llmCallLog.length > 0) {
+        for (var l = 0; l < llmCallLog.length; l++) {
+          var call = llmCallLog[l];
+          if (call.agent) {
+            var key = call.agent.toLowerCase().replace(/[\s-]/g, "_");
+            var nodeId = mapAgent(key);
+            if (nodeId && activatedNodes.indexOf(nodeId) === -1) activatedNodes.push(nodeId);
+          }
+        }
+      }
+
+      if (activatedNodes.length === 0) return;
+
+      for (var n = 0; n < activatedNodes.length; n++) {
+        var nodeId = activatedNodes[n];
+        var el = document.getElementById(nodeId);
+        if (el) {
+          el.classList.remove("node-gray");
+          el.classList.add("node-active");
+          var rect = el.querySelector(".node-rect");
+          if (rect) rect.style.fill = nodeColorValues[nodeId];
+        }
+      }
+
+      document.querySelectorAll(".arrow-line").forEach(function(line) {
+        line.classList.remove("arrow-active");
+        line.setAttribute("marker-end", "url(#arrowhead)");
+      });
+
+      for (var n = 0; n < activatedNodes.length; n++) {
+        var nodeId = activatedNodes[n];
+        var arrows = nodeArrowMap[nodeId] || [];
+        for (var ai = 0; ai < arrows.length; ai++) {
+          var arrowId = arrows[ai];
+          var targetArrow = document.getElementById(arrowId);
+          if (!targetArrow) continue;
+          var stripped = arrowId.replace("arrow-", "");
+          var parts = stripped.split("-");
+          var sourceNodeId = "node-" + parts[0];
+          if (activatedNodes.indexOf(sourceNodeId) !== -1) {
+            targetArrow.classList.add("arrow-active");
+            targetArrow.setAttribute("marker-end", "url(#arrowhead-active)");
+          }
+        }
+      }
+
+      ["arrow-intake-planner", "arrow-order-response", "arrow-account-response", "arrow-billing-response"].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+          el.classList.add("arrow-active");
+          el.setAttribute("marker-end", "url(#arrowhead-active)");
+        }
+      });
+    }
+
     function find() {
       var archVal = document.getElementById("arch").value;
       var model = document.getElementById("model").value;
@@ -105,11 +939,19 @@
 
       var archDir = archVal.split("/")[0];
       var condition = archVal.split("/")[1];
-
+      
       var url = archDir + "/evaluation/results/" + model + "/evaluation_results.json";
 
+      document.getElementById("emptyState").style.display = "none";
+      document.getElementById("resultCard").classList.remove("visible");
+
       fetch(url)
-        .then(function(resp) { return resp.json(); })
+        .then(function(resp) {
+          if (!resp.ok) throw new Error("HTTP " + resp.status + " " + resp.statusText + " for " + url);
+          var ct = resp.headers.get("content-type");
+          if (ct && ct.indexOf("json") === -1) throw new Error("Expected JSON but got " + ct + " for " + url);
+          return resp.json();
+        })
         .then(function(data) {
           var found = null;
           for (var i = 0; i < data.length; i++) {
@@ -121,78 +963,92 @@
           }
 
           if (!found) {
-            document.getElementById("output").textContent = "Not found.";
+            document.getElementById("emptyState").style.display = "block";
+            document.getElementById("emptyState").querySelector("h3").textContent = "Run not found";
+            document.getElementById("emptyState").querySelector("p").textContent = "No matching run found for the selected configuration";
+            resetAllNodes();
             return;
           }
 
-          var result = "";
-          result += "=== Run Info ===\n";
-          result += "Scenario:    " + found.scenario_id + " (" + found.scenario_category + ")\n";
-          result += "Run:         " + found.run_number + "\n";
-          result += "Condition:   " + found.condition + "\n";
-          result += "Model:       " + model + "\n";
-          result += "Customer ID: " + found.customer_id + "\n";
-          result += "\n";
-
-          result += "=== Outcome ===\n";
+          var outcomeHtml = "";
           if (found.success) {
-            result += "Result:      SUCCESS\n";
+            outcomeHtml = '<div class="outcome-badge outcome-success">✓ SUCCESS</div>';
           } else if (found.escalated) {
-            result += "Result:      ESCALATED\n";
+            outcomeHtml = '<div class="outcome-badge outcome-escalated">⚠ ESCALATED</div>';
           } else {
-            result += "Result:      ERROR\n";
+            outcomeHtml = '<div class="outcome-badge outcome-error">✗ ERROR</div>';
           }
-          result += "Expected:    " + found.expected_outcome + "\n";
-          result += "Errors:      " + found.error_count + "\n";
-          result += "Time:        " + found.elapsed_time.toFixed(2) + "s\n";
-          result += "LLM calls:   " + found.llm_calls_total + "\n";
-          result += "Steps:       " + found.step_count + "\n";
-          result += "\n";
+          document.getElementById("outcomeBadge").innerHTML = outcomeHtml;
 
-          result += "=== Request ===\n";
-          result += found.request + "\n";
-          result += "\n";
+          document.getElementById("metricTime").textContent = found.elapsed_time.toFixed(1) + "s";
+          document.getElementById("metricLLM").textContent = found.llm_calls_total;
+          document.getElementById("metricSteps").textContent = found.step_count;
+          document.getElementById("metricErrors").textContent = found.error_count;
 
-          result += "=== Response ===\n";
-          result += found.final_response + "\n";
-          result += "\n";
+          document.getElementById("requestBox").textContent = found.request;
+          document.getElementById("responseBox").textContent = found.final_response;
 
-          result += "=== Intent ===\n";
-          result += "Intent:   " + found.intent + "\n";
-          result += "Entities: " + JSON.stringify(found.entities) + "\n";
-          result += "\n";
+          var intentText = "Intent: " + found.intent + "\n\nEntities:\n";
+          Object.keys(found.entities).forEach(function(key) {
+            intentText += "  " + key + ": " + JSON.stringify(found.entities[key]) + "\n";
+          });
+          document.getElementById("intentBox").textContent = intentText;
 
-          result += "=== Tools ===\n";
-          result += "Tools used:     " + found.tool_calls.join(", ") + "\n";
-          result += "Agents involved: " + found.agents_involved.join(", ") + "\n";
-          result += "\n";
+          var toolsHtml = "";
+          found.tool_calls.forEach(function(tool) {
+            toolsHtml += '<span class="tag">' + tool + "</span>";
+          });
+          document.getElementById("toolsTags").innerHTML = toolsHtml;
 
-          if (found.completed_tasks.length > 0) {
-            result += "=== Completed Tasks ===\n";
-            for (var t = 0; t < found.completed_tasks.length; t++) {
-              var task = found.completed_tasks[t];
-              result += "- " + task.agent + " — " + task.task_type + "\n";
-              if (task.tool_calls) {
-                for (var c = 0; c < task.tool_calls.length; c++) {
-                  var tc = task.tool_calls[c];
-                  result += "    " + tc.tool + "(" + JSON.stringify(tc.args) + ")\n";
-                }
-              }
-            }
-            result += "\n";
-          }
+          var agentsHtml = "";
+          found.agents_involved.forEach(function(agent) {
+            agentsHtml += '<span class="tag" style="background:rgba(139,92,246,0.15);color:var(--accent-purple);border-color:rgba(139,92,246,0.2)">' + agent + "</span>";
+          });
+          document.getElementById("agentsTags").innerHTML = agentsHtml;
 
-          if (found.llm_call_log.length > 0) {
-            result += "=== LLM Calls ===\n";
-            for (var i = 0; i < found.llm_call_log.length; i++) {
-              var call = found.llm_call_log[i];
-              result += "--- Call " + (i + 1) + ": " + call.agent + " (" + call.latency_ms.toFixed(0) + "ms) ---\n";
-              result += "[Request]\n" + call.request_text + "\n\n";
-              result += "[Response]\n" + call.response_text + "\n\n";
-            }
+          if (found.completed_tasks && found.completed_tasks.length > 0) {
+            document.getElementById("tasksSection").style.display = "block";
+            var tasksHtml = "";
+            found.completed_tasks.forEach(function(task) {
+              tasksHtml += '<li class="task-item"><span class="task-agent">' + task.agent + '</span> <span class="task-type">— ' + task.task_type + "</span></li>";
+            });
+            document.getElementById("tasksList").innerHTML = tasksHtml;
+          } else {
+            document.getElementById("tasksSection").style.display = "none";
           }
 
-          document.getElementById("output").textContent = result;
+          if (found.llm_call_log && found.llm_call_log.length > 0) {
+            document.getElementById("llmSection").style.display = "block";
+            var llmHtml = "";
+            found.llm_call_log.forEach(function(call, idx) {
+              llmHtml += '<div class="llm-call">';
+              llmHtml += '<div class="llm-call-header"><span class="llm-call-agent">Call ' + (idx + 1) + ": " + call.agent + '</span><span class="llm-call-latency">' + call.latency_ms.toFixed(0) + "ms</span></div>";
+              llmHtml += '<div class="llm-call-content"><pre>' + escapeHtml(call.request_text) + "\n\n--- Response ---\n" + escapeHtml(call.response_text) + "</pre></div>";
+              llmHtml += "</div>";
+            });
+            document.getElementById("llmCalls").innerHTML = llmHtml;
+          } else {
+            document.getElementById("llmSection").style.display = "none";
+          }
+
+          document.getElementById("resultCard").classList.add("visible");
+
+          currentRun = found;
+
+          nodeGroups.forEach(function(g) { g.classList.remove("node-selected"); });
+          selectedNode = null;
+          document.getElementById("nodeInfo").classList.remove("visible");
+
+          if ((found.agents_involved && found.agents_involved.length > 0) ||
+              (found.llm_call_log && found.llm_call_log.length > 0)) {
+            highlightUsedNodes(found.agents_involved || [], found.llm_call_log || []);
+          }
+        })
+        .catch(function(err) {
+          document.getElementById("emptyState").style.display = "block";
+          document.getElementById("emptyState").querySelector("h3").textContent = "Error loading data";
+          document.getElementById("emptyState").querySelector("p").textContent = err.message;
+          resetAllNodes();
         });
     }
   </script>
